@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class PollenLauncher {
@@ -11,10 +12,11 @@ public class PollenLauncher {
 
         Flywheel = hardwareMap.get(DcMotorEx.class, "Pollen Flywheel");
         Flywheel.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        Flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     private static final double TICKS_PER_REV = 28.0;
-    private double GearRatio = 1.0;
+    private final double GearRatio = 1.0;
     private double TargetRPM = 0;
     private double Error = 0;
     private double kP = 0.0001;

@@ -13,6 +13,7 @@ public class PollenTurret {
         PollenTurret = hardwareMap.get(CRServo.class, "Pollen Turret");
         PollenEncoder = hardwareMap.get(AnalogInput.class,"Pollen Encoder");
 
+
         TargetAngle = GetCurrentAngle();
         previousTime = System.nanoTime();
     }
