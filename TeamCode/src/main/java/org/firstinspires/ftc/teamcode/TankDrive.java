@@ -71,29 +71,29 @@ public final class TankDrive {
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         // drive model parameters
-        public double inPerTick = 0;
-        public double trackWidthTicks = 0;
+        public double inPerTick = 96.0 / 56233.0;
+        public double trackWidthTicks = 30000;
 
         // feedforward parameters (in tick units)
-        public double kS = 0;
-        public double kV = 0;
-        public double kA = 0;
+        public double kS = 1.0866740082385036;
+        public double kV = 0.00016883948659401703;
+        public double kA = 0.000045;
 
         // path profile parameters (in inches)
-        public double maxWheelVel = 50;
-        public double minProfileAccel = -30;
-        public double maxProfileAccel = 50;
+        public double maxWheelVel = 65;
+        public double minProfileAccel = -90;
+        public double maxProfileAccel = 65;
 
         // turn profile parameters (in radians)
-        public double maxAngVel = Math.PI; // shared with path
-        public double maxAngAccel = Math.PI;
+        public double maxAngVel = 6.25 ; // shared with path
+        public double maxAngAccel = 6.25;
 
         // path controller gains
         public double ramseteZeta = 0.7; // in the range (0, 1)
         public double ramseteBBar = 2.0; // positive
 
         // turn controller gains
-        public double turnGain = 0.0;
+        public double turnGain = 6.25;
         public double turnVelGain = 0.0;
     }
 
@@ -236,8 +236,8 @@ public final class TankDrive {
         // TODO: make sure your config has motors with these names (or change them)
         //   add additional motors on each side if you have them
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
-        leftMotors = Arrays.asList(hardwareMap.get(DcMotorEx.class, "left"));
-        rightMotors = Arrays.asList(hardwareMap.get(DcMotorEx.class, "right"));
+        leftMotors = Arrays.asList(hardwareMap.get(DcMotorEx.class, "FrontLeft"),hardwareMap.get(DcMotorEx.class,"BackLeft"));
+        rightMotors = Arrays.asList(hardwareMap.get(DcMotorEx.class, "FrontRight"), hardwareMap.get(DcMotorEx.class, "BackRight"));
 
         for (DcMotorEx m : leftMotors) {
             m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -247,7 +247,8 @@ public final class TankDrive {
         }
 
         // TODO: reverse motor directions if needed
-        //   leftMotors.get(0).setDirection(DcMotorSimple.Direction.REVERSE);
+        leftMotors.get(0).setDirection(DcMotorSimple.Direction.REVERSE);
+        leftMotors.get(1).setDirection(DcMotorSimple.Direction.REVERSE);
 
         // TODO: make sure your config has an IMU with this name (can be BNO or BHI)
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
@@ -256,7 +257,7 @@ public final class TankDrive {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new DriveLocalizer(pose);
+        localizer = new PinpointLocalizer(hardwareMap, PARAMS.inPerTick, pose);
 
         FlightRecorder.write("TANK_PARAMS", PARAMS);
     }
@@ -418,8 +419,8 @@ public final class TankDrive {
             PoseVelocity2dDual<Time> command = new PoseVelocity2dDual<>(
                     Vector2dDual.constant(new Vector2d(0, 0), 3),
                     txWorldTarget.heading.velocity().plus(
-                            PARAMS.turnGain * localizer.getPose().heading.minus(txWorldTarget.heading.value()) +
-                            PARAMS.turnVelGain * (robotVelRobot.angVel - txWorldTarget.heading.velocity().value())
+                            PARAMS.turnGain * txWorldTarget.heading.value().minus(localizer.getPose().heading) +
+                                    PARAMS.turnVelGain * (txWorldTarget.heading.velocity().value() - robotVelRobot.angVel)
                     )
             );
             driveCommandWriter.write(new DriveCommandMessage(command));

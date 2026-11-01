@@ -24,7 +24,8 @@ public class PollenTurret {
     private double ServoPower = 0;
 
     // PIDF tuning constants
-    private double kP = 0.015;
+    private double kP = 0.008
+            ;
     private double kI = 0.0;
     private double kD = 0.0;
     private double kF = 0.0;

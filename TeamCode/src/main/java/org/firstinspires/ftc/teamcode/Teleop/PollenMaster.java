@@ -15,11 +15,10 @@ public class PollenMaster extends OpMode {
     private double TargetRPM = 3000;
     private double TargetAngle = 0;
 
-    // Previous D-pad states
     private boolean LastUp = false;
     private boolean LastDown = false;
-    private boolean LastLeft = false;
-    private boolean LastRight = false;
+
+    private static final double JOYSTICK_DEADZONE = 0.15;
 
     @Override
     public void init() {
@@ -29,7 +28,6 @@ public class PollenMaster extends OpMode {
 
         // Start turret at its current position
         TargetAngle = turret.GetCurrentAngle();
-
         turret.SetTargetAngle(TargetAngle);
 
         telemetry.addData("Status", "Initialized");
@@ -39,7 +37,6 @@ public class PollenMaster extends OpMode {
     @Override
     public void start() {
 
-        // Set initial flywheel speed when Play is pressed
         launcher.SetTargetRPM(TargetRPM);
     }
 
@@ -58,33 +55,33 @@ public class PollenMaster extends OpMode {
             TargetRPM = Math.max(0, TargetRPM - 50);
         }
 
-        // -------------------------
-        // Turret angle controls
-        // -------------------------
-
-        if (gamepad1.dpad_right && !LastRight) {
-            TargetAngle += 5;
-        }
-
-        if (gamepad1.dpad_left && !LastLeft) {
-            TargetAngle -= 5;
-        }
-
-        // -------------------------
-        // Save previous D-pad states
-        // -------------------------
-
         LastUp = gamepad1.dpad_up;
         LastDown = gamepad1.dpad_down;
-        LastRight = gamepad1.dpad_right;
-        LastLeft = gamepad1.dpad_left;
 
         // -------------------------
-        // Set subsystem targets
+        // Turret joystick controls
+        // -------------------------
+
+
+        double x = gamepad1.left_stick_x;
+        double y = -gamepad1.left_stick_y;
+
+        double magnitude = Math.hypot(x, y);
+
+        if (magnitude > JOYSTICK_DEADZONE) {
+
+            TargetAngle = Math.toDegrees(Math.atan2(y, x));
+
+            TargetAngle = (TargetAngle + 360) % 360;
+
+            turret.SetTargetAngle(TargetAngle);
+        }
+
+        // -------------------------
+        // Set launcher target
         // -------------------------
 
         launcher.SetTargetRPM(TargetRPM);
-        turret.SetTargetAngle(TargetAngle);
 
         // -------------------------
         // Update subsystems
