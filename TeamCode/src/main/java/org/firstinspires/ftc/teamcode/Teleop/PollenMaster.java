@@ -1,114 +1,169 @@
+
 package org.firstinspires.ftc.teamcode.Teleop;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.Subsystems.PollenTurret;
 import org.firstinspires.ftc.teamcode.Subsystems.PollenLauncher;
+import org.firstinspires.ftc.teamcode.Subsystems.PollenHood;
 
 @TeleOp(name = "Pollen Master", group = "TeleOp")
-public class PollenMaster extends OpMode {
-
-    private PollenTurret turret;
-    private PollenLauncher launcher;
-
-    private double TargetRPM = 3000;
-    private double TargetAngle = 0;
-
-    private boolean LastUp = false;
-    private boolean LastDown = false;
-
-    private static final double JOYSTICK_DEADZONE = 0.15;
+public class PollenMaster extends LinearOpMode {
 
     @Override
-    public void init() {
+    public void runOpMode() {
 
-        turret = new PollenTurret(hardwareMap);
-        launcher = new PollenLauncher(hardwareMap);
+        PollenLauncher Launcher = new PollenLauncher(hardwareMap);
+        PollenHood Hood = new PollenHood(hardwareMap);
 
-        // Start turret at its current position
-        TargetAngle = turret.GetCurrentAngle();
-        turret.SetTargetAngle(TargetAngle);
+        // Starting settings
+        double TargetRPM = 2500;
+        double TargetAngle = 30;
 
-        telemetry.addData("Status", "Initialized");
+        boolean LauncherEnabled = false;
+
+        // Previous button states
+        boolean PreviousUp = false;
+        boolean PreviousDown = false;
+        boolean PreviousLeft = false;
+        boolean PreviousRight = false;
+        boolean PreviousA = false;
+
+        telemetry.addLine("Pollen Master Ready");
+        telemetry.addLine("D-Pad Up/Down: RPM +/- 50");
+        telemetry.addLine("D-Pad Left/Right: Hood +/- 1 degree");
+        telemetry.addLine("A: Toggle Launcher");
+        telemetry.addLine("B: Stop Launcher");
+        telemetry.addLine("X: Hood Minimum (9 deg)");
+        telemetry.addLine("Y: Hood Maximum (50 deg)");
         telemetry.update();
-    }
 
-    @Override
-    public void start() {
+        waitForStart();
 
-        launcher.SetTargetRPM(TargetRPM);
-    }
+        if (isStopRequested()) return;
 
-    @Override
-    public void loop() {
+        Hood.SetTargetAngle(TargetAngle);
 
-        // -------------------------
-        // Flywheel RPM controls
-        // -------------------------
+        try {
+            while (opModeIsActive()) {
 
-        if (gamepad1.dpad_up && !LastUp) {
-            TargetRPM += 50;
+                // Read buttons
+                boolean Up = gamepad1.dpad_up;
+                boolean Down = gamepad1.dpad_down;
+                boolean Left = gamepad1.dpad_left;
+                boolean Right = gamepad1.dpad_right;
+                boolean A = gamepad1.a;
+
+                // =========================
+                // LAUNCHER RPM ADJUSTMENT
+                // =========================
+
+                if (Up && !PreviousUp) {
+                    TargetRPM += 50;
+                }
+
+                if (Down && !PreviousDown) {
+                    TargetRPM -= 50;
+                }
+
+                TargetRPM = Math.max(0,
+                        Math.min(3000, TargetRPM));
+
+                // =========================
+                // HOOD ANGLE ADJUSTMENT
+                // =========================
+
+                if (Right && !PreviousRight) {
+                    TargetAngle += 1;
+                }
+
+                if (Left && !PreviousLeft) {
+                    TargetAngle -= 1;
+                }
+
+                // Hood preset positions
+                if (gamepad1.x) {
+                    TargetAngle = 9;
+                }
+
+                if (gamepad1.y) {
+                    TargetAngle = 50;
+                }
+
+                // Hood subsystem handles its own limits
+                Hood.SetTargetAngle(TargetAngle);
+                TargetAngle = Hood.GetTargetAngle();
+
+                // =========================
+                // LAUNCHER ON / OFF
+                // =========================
+
+                if (A && !PreviousA) {
+                    LauncherEnabled = !LauncherEnabled;
+                }
+
+                if (gamepad1.b) {
+                    LauncherEnabled = false;
+                }
+
+                if (LauncherEnabled) {
+                    Launcher.SetTargetRPM(TargetRPM);
+                } else {
+                    Launcher.SetTargetRPM(0);
+                }
+
+                // Update launcher PIDF
+                Launcher.Update();
+
+                // =========================
+                // SAVE BUTTON STATES
+                // =========================
+
+                PreviousUp = Up;
+                PreviousDown = Down;
+                PreviousLeft = Left;
+                PreviousRight = Right;
+                PreviousA = A;
+
+                // =========================
+                // TELEMETRY
+                // =========================
+
+                telemetry.addLine("=== POLLEN MASTER ===");
+
+                telemetry.addLine();
+                telemetry.addData("Launcher",
+                        LauncherEnabled ? "ON" : "OFF");
+
+                telemetry.addData("Selected RPM",
+                        "%.0f", TargetRPM);
+
+                telemetry.addData("Target RPM",
+                        "%.0f", Launcher.GetTargetRPM());
+
+                telemetry.addData("Current RPM",
+                        "%.0f", Launcher.GetCurrentRPM());
+
+                telemetry.addData("RPM Error",
+                        "%.0f", Launcher.GetError());
+
+                telemetry.addLine();
+                telemetry.addData("Hood Target Angle",
+                        "%.1f deg", Hood.GetTargetAngle());
+
+                telemetry.addLine();
+                telemetry.addLine("D-Pad UP/DOWN: RPM +/- 50");
+                telemetry.addLine("D-Pad LEFT/RIGHT: Hood +/- 1");
+                telemetry.addLine("A: Toggle Launcher");
+                telemetry.addLine("B: Stop Launcher");
+                telemetry.addLine("X: Hood Minimum (9 deg)");
+                telemetry.addLine("Y: Hood Maximum (50 deg)");
+
+                telemetry.update();
+            }
         }
-
-        if (gamepad1.dpad_down && !LastDown) {
-            TargetRPM = Math.max(0, TargetRPM - 50);
+        finally {
+            Launcher.Stop();
         }
-
-        LastUp = gamepad1.dpad_up;
-        LastDown = gamepad1.dpad_down;
-
-        // -------------------------
-        // Turret joystick controls
-        // -------------------------
-
-
-        double x = gamepad1.left_stick_x;
-        double y = -gamepad1.left_stick_y;
-
-        double magnitude = Math.hypot(x, y);
-
-        if (magnitude > JOYSTICK_DEADZONE) {
-
-            TargetAngle = Math.toDegrees(Math.atan2(y, x));
-
-            TargetAngle = (TargetAngle + 360) % 360;
-
-            turret.SetTargetAngle(TargetAngle);
-        }
-
-        // -------------------------
-        // Set launcher target
-        // -------------------------
-
-        launcher.SetTargetRPM(TargetRPM);
-
-        // -------------------------
-        // Update subsystems
-        // -------------------------
-
-        turret.Update();
-        launcher.Update();
-
-        // -------------------------
-        // Telemetry
-        // -------------------------
-
-        telemetry.addData("Target RPM", launcher.GetTargetRPM());
-        telemetry.addData("Current RPM", launcher.GetCurrentRPM());
-        telemetry.addData("RPM Error", launcher.GetError());
-
-        telemetry.addData("Target Angle", turret.GetTargetAngle());
-        telemetry.addData("Current Angle", turret.GetCurrentAngle());
-        telemetry.addData("Angle Error", turret.GetError());
-
-        telemetry.update();
-    }
-
-    @Override
-    public void stop() {
-
-        launcher.Stop();
-        turret.Stop();
     }
 }

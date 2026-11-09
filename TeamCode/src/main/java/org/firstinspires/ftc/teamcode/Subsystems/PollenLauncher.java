@@ -6,17 +6,22 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class PollenLauncher {
 
-    private DcMotorEx Flywheel;
+    private DcMotorEx Left;
+    private DcMotorEx Right;
 
     public PollenLauncher(HardwareMap hardwareMap) {
 
-        Flywheel = hardwareMap.get(DcMotorEx.class, "Pollen Flywheel");
-        Flywheel.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        Flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        Left = hardwareMap.get(DcMotorEx.class, "PollenMotorLeft");
+        Right = hardwareMap.get(DcMotorEx.class, "PollenMotorRight");
+        Left.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        Left.setDirection(DcMotorSimple.Direction.REVERSE);
+        Right.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        Right.setDirection(DcMotorSimple.Direction.FORWARD);
+
     }
 
     private static final double TICKS_PER_REV = 28.0;
-    private final double GearRatio = 1.0;
+    private final double GearRatio = 2.0;
     private double TargetRPM = 0;
     private double Error = 0;
     private double kP = 0.0001;
@@ -28,7 +33,7 @@ public class PollenLauncher {
     private double PreviousRPM = 0;
     private double MotorPower = 0;
     public double GetCurrentRPM() {
-        return (Flywheel.getVelocity() / TICKS_PER_REV) * 60.0 / GearRatio;
+        return (Left.getVelocity() / TICKS_PER_REV) * 60.0 / GearRatio;
     }
     public void SetTargetRPM(double rpm) {
         rpm = Math.max(0, rpm);
@@ -60,7 +65,8 @@ public class PollenLauncher {
             MotorPower = 0;
             Integral = 0;
             PreviousRPM = CurrentRPM;
-            Flywheel.setPower(0);
+            Left.setPower(0);
+            Right.setPower(0);
             return;
         }
 
@@ -83,7 +89,8 @@ public class PollenLauncher {
 
         MotorPower = Math.max(0, Math.min(1, MotorPower));
 
-        Flywheel.setPower(MotorPower);
+        Left.setPower(MotorPower);
+        Right.setPower(MotorPower);
     }
 
     public void Stop() {
@@ -92,7 +99,8 @@ public class PollenLauncher {
         MotorPower = 0;
         PreviousRPM = GetCurrentRPM();
         PreviousTime = System.nanoTime();
-        Flywheel.setPower(0);
+        Left.setPower(0);
+        Right.setPower(0);
     }
 
 }

@@ -302,6 +302,11 @@ public final class TankDrive {
 
         @Override
         public boolean run(@NonNull TelemetryPacket p) {
+            p.fieldOverlay().drawImage(
+                    "/images/field.png",
+                    0, 0,
+                    144, 144
+            );
             double t;
             if (beginTs < 0) {
                 beginTs = Actions.now();
@@ -382,6 +387,7 @@ public final class TankDrive {
     }
 
     public final class TurnAction implements Action {
+
         private final TimeTurn turn;
 
         private double beginTs = -1;
@@ -392,6 +398,11 @@ public final class TankDrive {
 
         @Override
         public boolean run(@NonNull TelemetryPacket p) {
+            p.fieldOverlay().drawImage(
+                    "/images/field.png",
+                    0, 0,
+                    144, 144
+            );
             double t;
             if (beginTs < 0) {
                 beginTs = Actions.now();

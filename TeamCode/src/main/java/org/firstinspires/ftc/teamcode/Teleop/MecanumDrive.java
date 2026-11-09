@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @TeleOp(name = "Mecanum Drive", group = "TeleOp")
 public class MecanumDrive extends OpMode {
@@ -26,8 +27,8 @@ public class MecanumDrive extends OpMode {
         FrontLeft.setDirection(DcMotor.Direction.REVERSE);
         FrontRight.setDirection(DcMotor.Direction.FORWARD);
 
-        BackLeft.setDirection(DcMotor.Direction.FORWARD);
-        BackRight.setDirection(DcMotor.Direction.REVERSE);
+        BackLeft.setDirection(DcMotor.Direction.REVERSE);
+        BackRight.setDirection(DcMotor.Direction.FORWARD);
 
         // Brake when joysticks are released
         FrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -41,8 +42,8 @@ public class MecanumDrive extends OpMode {
 
         // Gamepad inputs
         double y = -gamepad1.left_stick_y;
-        double x = gamepad1.left_stick_x;
-        double rx = gamepad1.right_stick_x;
+        double rx = gamepad1.left_stick_x;
+        double x = gamepad1.right_stick_x;
 
         // Normalize motor powers
         double denominator = Math.max(
